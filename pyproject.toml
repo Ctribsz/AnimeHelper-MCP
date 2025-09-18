@@ -1,0 +1,13 @@
+[project]
+name = "anime-helper"
+version = "0.1.0"
+description = "MCP server for Anime & Manga (AniList + Jikan) returning structured JSON."
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = ["mcp[cli]>=1.2.1", "requests>=2.32.0"]
+
+[project.urls]
+Homepage = "https://github.com/Ctribsz/MCP-AnimeHelper"
+
+[tool.setuptools.packages.find]
+where = ["."]
