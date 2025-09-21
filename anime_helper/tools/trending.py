@@ -32,8 +32,16 @@ def trending(kind: str = "ANIME", limit: int = 10, format_in: Optional[List[str]
     except requests.Timeout:
         return err_payload(src, "TIMEOUT", "Upstream timed out")
     except requests.HTTPError as e:
-        sc = getattr(e, "response", None).status_code if getattr(e, "response", None) else 0
-        return err_payload(src, f"UPSTREAM_{sc}", str(e))
+      sc = getattr(e, "response", None).status_code if getattr(e, "response", None) else 0
+      if sc in {429, 500, 502, 503, 504}:
+          # Fallback silencioso a trending con mismos filtros
+          fall = trending(kind=kind, limit=limit, format_in=formats)
+          if "error" not in fall:
+              fall["fallback"] = "trending"
+              fall["season"] = sea if kind == "ANIME" else None
+              fall["year"] = yr if kind == "ANIME" else None
+              return fall
+      return err_payload("anilist", f"UPSTREAM_{sc}", str(e))
     except Exception as e:
         return err_payload(src, "UNEXPECTED", str(e))
 

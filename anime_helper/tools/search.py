@@ -9,32 +9,70 @@ from ..core.http_client import http_get, err_payload
 from ..core.normalizers import norm_hit_from_anilist
 from ..models.types import MediaHit
 
-def search_media(query: str, kind: str = "ANIME", source: str = "anilist", limit: int = 5):
-    """Busca ANIME o MANGA. source: 'anilist' (default) o 'jikan' (fallback)."""
+def search_media(
+    query: str,
+    kind: str = "ANIME",
+    source: str = "anilist",
+    limit: int = 5,
+    format_in: Optional[List[str]] = None,
+):
+    """
+    Busca ANIME o MANGA.
+    source: 'anilist' (default) o 'jikan' (fallback).
+    format_in: lista opcional de formatos (p.ej. ['MOVIE','TV','OVA','ONA','SPECIAL'])
+    """
     src = source
     try:
         kind = kind.upper()
         limit = min(max(limit, 1), 25)
+        formats = [f.upper() for f in (format_in or [])] or None
 
         if source == "anilist":
             q = """
-            query ($q: String, $type: MediaType, $per: Int) {
+            query ($q: String, $type: MediaType, $per: Int, $formats:[MediaFormat!]) {
               Page(perPage: $per) {
-                media(search: $q, type: $type, sort: [SEARCH_MATCH, POPULARITY_DESC]) {
+                media(
+                  search: $q,
+                  type: $type,
+                  sort: [SEARCH_MATCH, POPULARITY_DESC],
+                  format_in: $formats
+                ) {
                   id idMal siteUrl format episodes chapters averageScore seasonYear
                   startDate { year } title { romaji english native }
                 }
               }
             }"""
-            data = gql(q, {"q": query, "type": kind, "per": limit})
+            data = gql(q, {"q": query, "type": kind, "per": limit, "formats": formats})
             hits = [norm_hit_from_anilist(m) for m in data["Page"]["media"]]
-            return {"schemaVersion": "1.0.0", "query": query, "kind": kind, "source": "anilist", "results": hits[:limit]}
+            return {
+                "schemaVersion": "1.0.0",
+                "query": query,
+                "kind": kind,
+                "source": "anilist",
+                "format_in": formats,
+                "results": hits[:limit],
+            }
 
-        # Fallback Jikan (MAL) sin key
+        # -------- Fallback: Jikan (MAL) sin key --------
+        # Intento de mapeo de formatos AniList -> type Jikan (client-side)
+        jl_map = {"TV": "tv", "MOVIE": "movie", "OVA": "ova", "ONA": "ona", "SPECIAL": "special"}
+        jikan_type = None
+        if formats:
+            # si mandan varios, usamos el primero que mapee
+            for f in formats:
+                if f in jl_map:
+                    jikan_type = jl_map[f]
+                    break
+
         base = "https://api.jikan.moe/v4/anime" if kind == "ANIME" else "https://api.jikan.moe/v4/manga"
-        url = f"{base}?q={urllib.parse.quote(query)}&limit={limit}"
+        params = {"q": query, "limit": str(limit)}
+        if jikan_type and kind == "ANIME":
+            params["type"] = jikan_type  # Jikan solo tipa anime; manga no acepta estos 'type' de emisión
+
+        url = base + "?" + urllib.parse.urlencode(params)
         r = http_get(url)
         payload = r.json()
+
         out: List[MediaHit] = []
         for it in payload.get("data", []):
             titles = {"romaji": it.get("title"), "english": it.get("title_english"), "native": None}
@@ -51,7 +89,19 @@ def search_media(query: str, kind: str = "ANIME", source: str = "anilist", limit
                 "score": int(score * 10) if isinstance(score, (int, float)) else None,
                 "url": it.get("url")
             })
-        return {"schemaVersion": "1.0.0", "query": query, "kind": kind, "source": "jikan", "results": out}
+
+        # Si pedían un formato y Jikan no lo filtra (p.ej. MANGA), filtramos client-side
+        if formats and kind == "MANGA":
+            out = [h for h in out if (h.get("format") or "").upper() in formats]
+
+        return {
+            "schemaVersion": "1.0.0",
+            "query": query,
+            "kind": kind,
+            "source": "jikan",
+            "format_in": formats,
+            "results": out,
+        }
 
     except requests.Timeout:
         return err_payload(src, "TIMEOUT", "Upstream timed out")
@@ -60,7 +110,6 @@ def search_media(query: str, kind: str = "ANIME", source: str = "anilist", limit
         return err_payload(src, f"UPSTREAM_{sc}", str(e))
     except Exception as e:
         return err_payload(src, "UNEXPECTED", str(e))
-
 
 def resolve_title(title: str, kind: str = "ANIME", limit: int = 5):
     """

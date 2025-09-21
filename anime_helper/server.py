@@ -10,7 +10,7 @@ from __future__ import annotations
 from mcp.server.fastmcp import FastMCP
 
 # Import tool modules (each provides register_tools(mcp))
-from .tools import search, details, trending, airing, cache_tools, nlp, meta
+from .tools import search, details, trending, airing, cache_tools, nlp, meta, resolve
 
 
 def create_app() -> FastMCP:
@@ -24,7 +24,8 @@ def create_app() -> FastMCP:
     cache_tools.register_tools(mcp)
     nlp.register_tools(mcp)
     meta.register_tools(mcp)
-
+    resolve.register_tools(mcp)
+    
     return mcp
 
 
