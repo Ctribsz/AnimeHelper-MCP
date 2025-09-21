@@ -17,11 +17,10 @@ def _req(method: str, url: str, **kw) -> requests.Response:
     timeout = kw.pop("timeout", DEFAULT_TIMEOUT)
     headers = {"User-Agent": UA, **kw.pop("headers", {})}
     backoff = 0.7
-    
+
     for attempt in range(3):
         try:
             r = requests.request(method, url, timeout=timeout, headers=headers, **kw)
-            # reintentos para 429/5xx
             if r.status_code in RETRY_CODES:
                 raise requests.HTTPError(f"{r.status_code} upstream", response=r)
             return r
@@ -40,22 +39,12 @@ def _req(method: str, url: str, **kw) -> requests.Response:
 
 
 def http_get(url: str, **kw) -> requests.Response:
-    """Make a GET request with retry logic."""
     return _req("GET", url, **kw)
 
 
 def http_post(url: str, **kw) -> requests.Response:
-    """Make a POST request with retry logic."""
     return _req("POST", url, **kw)
 
 
 def err_payload(source: str, code: str, message: str) -> Dict[str, Any]:
-    """Create a standardized error payload."""
-    return {
-        "schemaVersion": SCHEMA,
-        "error": {
-            "code": code,
-            "message": message,
-            "source": source
-        }
-    }
+    return {"schemaVersion": SCHEMA, "error": {"code": code, "message": message, "source": source}}

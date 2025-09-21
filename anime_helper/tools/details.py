@@ -6,6 +6,7 @@ from ..core.http_client import http_get, err_payload
 from ..core.normalizers import norm_details_from_anilist
 from ..models.types import Details
 
+
 def media_details(source: str, id: int, kind: str = "ANIME") -> Details:
     """Ficha completa normalizada. source: 'anilist' (id AniList) o 'jikan' (id MAL)."""
     src = source
@@ -67,5 +68,4 @@ def media_details(source: str, id: int, kind: str = "ANIME") -> Details:
 
 
 def register_tools(mcp):
-    """Register details-related tools with FastMCP."""
     mcp.tool()(media_details)

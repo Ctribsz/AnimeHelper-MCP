@@ -9,6 +9,7 @@ from ..core.http_client import err_payload
 from ..core.normalizers import norm_title
 from ..models.types import AiringItem
 
+
 def airing_status(anilist_id: Optional[int] = None, query: Optional[str] = None):
     """
     Estado de emisión (ANIME): último emitido ('last') y próximo ('next').
@@ -47,9 +48,7 @@ def airing_status(anilist_id: Optional[int] = None, query: Optional[str] = None)
         return {
             "schemaVersion": "1.0.0",
             "id": m["id"],
-            "titles": {"romaji": (m["title"] or {}).get("romaji"),
-                       "english": (m["title"] or {}).get("english"),
-                       "native": (m["title"] or {}).get("native")},
+            "titles": norm_title(m.get("title", {})),
             "url": m.get("siteUrl"),
             "last": {"episode": last.get("episode"), "airingAt": last.get("airingAt")} if last else None,
             "next": {"episode": nxt.get("episode"), "airingAt": nxt.get("airingAt")} if nxt else None
@@ -61,6 +60,7 @@ def airing_status(anilist_id: Optional[int] = None, query: Optional[str] = None)
         return err_payload("anilist", f"UPSTREAM_{sc}", str(e))
     except Exception as e:
         return err_payload("anilist", "UNEXPECTED", str(e))
+
 
 def airing_calendar(days: int = 7, per_page: int = 50):
     """
@@ -113,6 +113,5 @@ def airing_calendar(days: int = 7, per_page: int = 50):
 
 
 def register_tools(mcp):
-    """Register airing-related tools with FastMCP."""
     mcp.tool()(airing_status)
     mcp.tool()(airing_calendar)

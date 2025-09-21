@@ -5,16 +5,10 @@ from ..models.types import Title, MediaHit, Details
 
 
 def norm_title(t: Dict[str, Any]) -> Title:
-    """Normalize title data from API response."""
-    return {
-        "romaji": t.get("romaji"),
-        "english": t.get("english"),
-        "native": t.get("native")
-    }
+    return {"romaji": t.get("romaji"), "english": t.get("english"), "native": t.get("native")}
 
 
 def norm_hit_from_anilist(m: Dict[str, Any]) -> MediaHit:
-    """Normalize media hit data from AniList API."""
     return {
         "source": "anilist",
         "id": m.get("id"),
@@ -30,18 +24,12 @@ def norm_hit_from_anilist(m: Dict[str, Any]) -> MediaHit:
 
 
 def norm_details_from_anilist(m: Dict[str, Any]) -> Details:
-    """Normalize detailed media data from AniList API."""
     recs: List[MediaHit] = []
     for node in (m.get("recommendations", {}) or {}).get("nodes", []):
         mr = node.get("mediaRecommendation") or {}
         if mr:
             recs.append(norm_hit_from_anilist(mr))
-    
-    externals = [
-        {"site": ex.get("site") or ex.get("type") or "", "url": ex.get("url") or ""}
-        for ex in (m.get("externalLinks") or [])
-    ]
-    
+    externals = [{"site": ex.get("site") or ex.get("type") or "", "url": ex.get("url") or ""} for ex in (m.get("externalLinks") or [])]
     return {
         "source": "anilist",
         "id": m.get("id"),

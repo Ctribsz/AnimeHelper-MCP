@@ -9,6 +9,7 @@ from ..core.http_client import err_payload
 from ..core.normalizers import norm_hit_from_anilist
 from ..utils.helpers import season_from_month
 
+
 def trending(kind: str = "ANIME", limit: int = 10, format_in: Optional[List[str]] = None):
     """Top trending (AniList). Opcional: format_in=['MOVIE','TV','OVA','ONA','SPECIAL']"""
     src = "anilist"
@@ -35,6 +36,7 @@ def trending(kind: str = "ANIME", limit: int = 10, format_in: Optional[List[str]
         return err_payload(src, f"UPSTREAM_{sc}", str(e))
     except Exception as e:
         return err_payload(src, "UNEXPECTED", str(e))
+
 
 def season_top(kind: str = "ANIME", season: str | None = None, year: int | None = None,
                sort: str = "TRENDING_DESC", limit: int = 10, format_in: Optional[List[str]] = None):
@@ -88,6 +90,5 @@ def season_top(kind: str = "ANIME", season: str | None = None, year: int | None 
 
 
 def register_tools(mcp):
-    """Register trending-related tools with FastMCP."""
     mcp.tool()(trending)
     mcp.tool()(season_top)
