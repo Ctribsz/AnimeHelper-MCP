@@ -13,7 +13,6 @@ def cache_clear():
     cleared = _cache_clear()
     return {"schemaVersion": "1.0.0", "cleared": cleared}
 
-
 def register_tools(mcp):
     """Register cache-related tools with FastMCP."""
     mcp.tool()(cache_info)

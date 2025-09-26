@@ -99,7 +99,8 @@ def ask(text: str, default_kind: str = "ANIME", default_limit: int = 5):
                 id=best["id"] if best["source"] == "anilist" else (best.get("idMal") or best["id"]),
                 kind=kind
             )
-    return {"schemaVersion": "1.0.0", "intent": "count", "args": {"query": title, "kind": kind}, "result": det}
+            
+            return {"schemaVersion": "1.0.0", "intent": "count", "args": {"query": title, "kind": kind}, "result": det}
 
         # 3) "qué es / de qué trata X" → ficha
         if any(w in low for w in ["qué es", "que es", "de qué trata", "de que trata", "what is"]):

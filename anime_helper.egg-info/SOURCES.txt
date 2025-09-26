@@ -1,9 +1,7 @@
 README.md
 pyproject.toml
 anime_helper/__init__.py
-anime_helper/init.py
 anime_helper/server.py
-anime_helper/server_legacy.py
 anime_helper.egg-info/PKG-INFO
 anime_helper.egg-info/SOURCES.txt
 anime_helper.egg-info/dependency_links.txt
@@ -21,7 +19,11 @@ anime_helper/tools/cache_tools.py
 anime_helper/tools/details.py
 anime_helper/tools/meta.py
 anime_helper/tools/nlp.py
+anime_helper/tools/resolve.py
 anime_helper/tools/search.py
 anime_helper/tools/trending.py
 anime_helper/utils/__init__.py
 anime_helper/utils/helpers.py
+tests/test_http_client.py
+tests/test_integration_live.py
+tests/test_meta.py
